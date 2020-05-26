@@ -1,8 +1,12 @@
 # Serilog.Sinks.Notepad [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.Notepad.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.Notepad) [![Help](https://img.shields.io/badge/stackoverflow-serilog-orange.svg)](http://stackoverflow.com/questions/tagged/serilog)
 
-A [Serilog](https://serilog.net) sink that writes log events to Notepad (_Yes, you've read it right!_). The default output is plain text; JSON formatting can be plugged in using a package such as [_Serilog.Formatting.Compact_](https://github.com/serilog/serilog-formatting-compact).
+A [Serilog](https://serilog.net) sink that writes log events to Notepad (_Yes, you've read it right!_). Simply open Notepad and immediately start receiving logs from your application, without even touching the filesystem.
 
 ![Screenshot of Serilog.Sinks.Notepad in action](assets/serilog-sinks-notepad-screenshot.png)
+
+`Serilog.Sinks.Notepad` writes messages to the most recent `notepad.exe` started on current user's session, by default. This behavior can be changed in the sink configuration.
+
+The default output is plain text; JSON formatting can be plugged in using a package such as [_Serilog.Formatting.Compact_](https://github.com/serilog/serilog-formatting-compact).
 
 ## Give a Star! :star:
 
@@ -24,17 +28,19 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 Log.Information("Hello, world!");
+
+Log.CloseAndFlush();
 ```
 
-Open Notepad, and you should see the logs appear in that Notepad window. By default, `Serilog.Sinks.Notepad` writes messages to the most recent `notepad.exe` started on the machine. This behavior can be changed in the sink configuration.
+Open Notepad, and you should see the logs appear in that Notepad window you've just opened. By default, `Serilog.Sinks.Notepad` writes messages to the most recent `notepad.exe` started by the user. This behavior can be changed in the sink configuration.
 
 ## Background
 
 I created this sink just for fun, after reading [this comment on Reddit](https://www.reddit.com/r/programming/comments/gnazif/ray_tracing_in_notepadexe_at_30_fps/fr8uy2l/):
 
-![Screenshot of Serilog.Sinks.Notepad in action](assets/reddit-comment-note-ad-as-debug-console.png)
+[![Screenshot of Serilog.Sinks.Notepad in action](assets/reddit-comment-note-ad-as-debug-console.png)](https://www.reddit.com/r/programming/comments/gnazif/ray_tracing_in_notepadexe_at_30_fps/fr8uy2l/)
 
-I thought that's a clever idea to be able to simply open a Notepad instance and immediately start receiving logs from your application, and I can imagine this actually being useful for troubleshooting issues with applications.
+I thought it was a clever idea to be able to simply open a Notepad instance and immediately start receiving logs from your application, and I can imagine this actually being useful for troubleshooting issues with applications.
 
 ## Configuration
 
@@ -133,10 +139,10 @@ To configure the Notepad sink and include the `SourceContext` in the output, cha
   "Serilog": {
     "WriteTo": [
       {
-          "Name": "Notepad",
-          "Args": {
-            "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <s:{SourceContext}>{NewLine}{Exception}"
-          }
+        "Name": "Notepad",
+        "Args": {
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <s:{SourceContext}>{NewLine}{Exception}"
+        }
       }
     ]
   }
