@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>A Serilog sink that writes log events to Notepad.</Description>
-    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionPrefix>1.1.0</VersionPrefix>
     <Authors>C. Augusto Proiete &amp; Contributors</Authors>
     <TargetFrameworks>net45;netstandard2.0;netcoreapp2.0;netcoreapp3.1</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
