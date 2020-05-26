@@ -149,6 +149,16 @@ To configure the Notepad sink and include the `SourceContext` in the output, cha
 }
 ```
 
+## Debugging and Diagnostics
+
+When Serilog is not behaving as you expect, this may be caused by an internal exception or configuration issue. Serilog writes simple diagnostic messages to [SelfLog](https://github.com/serilog/serilog/wiki/Debugging-and-Diagnostics#selflog), which can be forwarded to Notepad, using the `NotepadWindow` static class:
+
+```csharp
+Serilog.Debugging.SelfLog.Enable(s => NotepadWindow.WriteLine($"Internal Error with Serilog: {s}"));
+```
+
+The above will attempt to write Serilog's diagnostic messages to the most recent Notepad process open in the user's session.
+
 ## Release History
 
 Click on the [Releases](https://github.com/augustoproiete/serilog-sinks-notepad/releases) tab on GitHub.
