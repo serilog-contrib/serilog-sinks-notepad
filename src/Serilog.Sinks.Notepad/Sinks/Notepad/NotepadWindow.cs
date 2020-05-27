@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.InteropServices;
 using Serilog.Sinks.Notepad.Interop;
 
 namespace Serilog.Sinks.Notepad
@@ -38,6 +39,11 @@ namespace Serilog.Sinks.Notepad
         /// <param name="value">The string to be written</param>
         public static void Write(string value)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             var notepadWindow = _notepadWindow.Value;
             notepadWindow.Write(value);
             notepadWindow.Flush();
@@ -48,6 +54,11 @@ namespace Serilog.Sinks.Notepad
         /// </summary>
         public static void WriteLine()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             var notepadWindow = _notepadWindow.Value;
             notepadWindow.WriteLine();
             notepadWindow.Flush();
@@ -59,6 +70,11 @@ namespace Serilog.Sinks.Notepad
         /// <param name="value">The string to be written</param>
         public static void WriteLine(string value)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             var notepadWindow = _notepadWindow.Value;
             notepadWindow.WriteLine(value);
             notepadWindow.Flush();
