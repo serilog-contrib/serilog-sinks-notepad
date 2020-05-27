@@ -69,8 +69,6 @@ Pass a formatter to the `Notepad()` configuration method:
     .WriteTo.Notepad(new RenderedCompactJsonFormatter())
 ```
 
-Output theming is not available when custom formatters are used.
-
 ### XML `<appSettings>` configuration
 
 To use the Notepad sink with the [Serilog.Settings.AppSettings](https://github.com/serilog/serilog-settings-appsettings) package, first install that package if you haven't already done so:
