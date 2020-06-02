@@ -1,4 +1,4 @@
-# Serilog.Sinks.Notepad [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.Notepad.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.Notepad) [![Help](https://img.shields.io/badge/stackoverflow-serilog-orange.svg)](http://stackoverflow.com/questions/tagged/serilog)
+# Serilog.Sinks.Notepad [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.Notepad.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.Notepad) [![Stack Overflow](https://img.shields.io/badge/stack%20overflow-serilog-orange.svg)](http://stackoverflow.com/questions/tagged/serilog)
 
 A [Serilog](https://serilog.net) sink that writes log events to Notepad (_Yes, you've read it right!_). Simply open Notepad and immediately start receiving logs from your application, without even touching the filesystem.
 
