@@ -16,15 +16,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{98FECE
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{C73ACC17-798C-44E7-BC96-4BEADBD4085D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDemo", "sample\ConsoleDemo\ConsoleDemo.csproj", "{B3DD36B1-EEFA-4E7C-82B8-60728AFACCF7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleDemo", "sample\ConsoleDemo\ConsoleDemo.csproj", "{B3DD36B1-EEFA-4E7C-82B8-60728AFACCF7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A788D7A8-C32F-4EFC-ADD0-2A1791595225}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.Notepad", "src\Serilog.Sinks.Notepad\Serilog.Sinks.Notepad.csproj", "{CC7EBF80-9141-489F-A7BC-D59D18971279}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Notepad", "src\Serilog.Sinks.Notepad\Serilog.Sinks.Notepad.csproj", "{CC7EBF80-9141-489F-A7BC-D59D18971279}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1E653E10-F79F-4BFF-9A49-30F4B7DCF851}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.Notepad.Tests", "test\Serilog.Sinks.Notepad.Tests\Serilog.Sinks.Notepad.Tests.csproj", "{FC1DB800-0FD6-489A-96B6-B4C880EC409B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Notepad.Tests", "test\Serilog.Sinks.Notepad.Tests\Serilog.Sinks.Notepad.Tests.csproj", "{FC1DB800-0FD6-489A-96B6-B4C880EC409B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
