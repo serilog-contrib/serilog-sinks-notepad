@@ -1,8 +1,22 @@
-# Serilog.Sinks.Notepad [![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.Notepad.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.Notepad) [![Stack Overflow](https://img.shields.io/badge/stack%20overflow-serilog-orange.svg)](http://stackoverflow.com/questions/tagged/serilog)
+| README.md |
+|:---|
+
+<div align="center">
+
+<img src="assets/serilog-sink-nuget.png" alt="Serilog.Sinks.Notepad" width="100" />
+
+</div>
+
+<h1 align="center">Serilog.Sinks.Notepad</h1>
+<div align="center">
 
 A [Serilog](https://serilog.net) sink that writes log events to Notepad (_Yes, you've read it right!_). Simply open Notepad and immediately start receiving logs from your application, without even touching the filesystem.
 
+[![NuGet Version](http://img.shields.io/nuget/v/Serilog.Sinks.Notepad.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.Notepad) [![Stack Overflow](https://img.shields.io/badge/stack%20overflow-serilog-orange.svg)](http://stackoverflow.com/questions/tagged/serilog)
+
 ![Screenshot of Serilog.Sinks.Notepad in action](assets/serilog-sinks-notepad-screenshot.png)
+
+</div>
 
 `Serilog.Sinks.Notepad` writes messages to the most recent `notepad.exe` started on current user's session, by default. This behavior can be changed in the sink configuration.
 
@@ -12,7 +26,7 @@ The default output is plain text; JSON formatting can be plugged in using a pack
 
 If you like or are using this project please give it a star. Thanks!
 
-## Getting started
+## Getting started :rocket:
 
 Install the [Serilog.Sinks.Notepad](https://www.nuget.org/packages/Serilog.Sinks.Notepad) package from NuGet:
 
