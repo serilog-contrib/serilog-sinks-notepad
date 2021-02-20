@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
     <AssemblyName>Serilog.Sinks.Notepad.Tests</AssemblyName>
     <IsPackable>false</IsPackable>
@@ -32,5 +32,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Serilog.Sinks.Notepad\Serilog.Sinks.Notepad.csproj" />
   </ItemGroup>
-  
+
 </Project>

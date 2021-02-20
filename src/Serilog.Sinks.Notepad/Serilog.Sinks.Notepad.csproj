@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0;netcoreapp2.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net5.0;netstandard2.0;net45</TargetFrameworks>
     <RootNamespace>Serilog</RootNamespace>
 
     <AssemblyName>Serilog.Sinks.Notepad</AssemblyName>
@@ -33,14 +33,14 @@
     <Company>augustoproiete.net</Company>
     <Description>A Serilog sink that writes log events to Notepad.</Description>
     <Copyright>Copyright 2020-2021 C. Augusto Proiete &amp; Contributors - Provided under the Apache License, Version 2.0</Copyright>
-    <PackageTags>serilog;notepad;sink</PackageTags>
+    <PackageTags>serilog;notepad;sink;selflog;diagnostic;debug;troubleshoot;augustoproiete</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageIcon>images\icon.png</PackageIcon>
     <PackageIconUrl>http://serilog.net/images/serilog-sink-nuget.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/augustoproiete/serilog-sinks-notepad</PackageProjectUrl>
     <PackageReleaseNotes>https://github.com/augustoproiete/serilog-sinks-notepad/releases</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/augustoproiete/serilog-sinks-notepad</RepositoryUrl>
+    <RepositoryUrl>https://github.com/augustoproiete/serilog-sinks-notepad.git</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup>
