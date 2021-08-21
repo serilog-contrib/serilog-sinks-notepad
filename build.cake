@@ -63,7 +63,7 @@ Task("pack")
     .IsDependentOn("test")
     .Does(() =>
 {
-    var releaseNotes = $"https://github.com/augustoproiete/serilog-sinks-notepad/releases/tag/v{buildVersion.Version}";
+    var releaseNotes = $"https://github.com/serilog-contrib/serilog-sinks-notepad/releases/tag/v{buildVersion.Version}";
 
     DotNetCorePack("./src/Serilog.Sinks.Notepad/Serilog.Sinks.Notepad.csproj", new DotNetCorePackSettings
     {

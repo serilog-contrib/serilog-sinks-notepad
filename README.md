@@ -173,7 +173,7 @@ The above will attempt to write Serilog's diagnostic messages to the most recent
 
 ## Release History
 
-Click on the [Releases](https://github.com/augustoproiete/serilog-sinks-notepad/releases) tab on GitHub.
+Click on the [Releases](https://github.com/serilog-contrib/serilog-sinks-notepad/releases) tab on GitHub.
 
 ---
 

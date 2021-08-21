@@ -1,1 +1,1 @@
-See: https://github.com/augustoproiete/serilog-sinks-notepad/releases
+See: https://github.com/serilog-contrib/serilog-sinks-notepad/releases
