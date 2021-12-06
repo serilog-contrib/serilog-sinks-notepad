@@ -1,5 +1,5 @@
-#addin "nuget:?package=Cake.MinVer&version=1.0.1"
-#addin "nuget:?package=Cake.Args&version=1.0.1"
+#addin "nuget:?package=Cake.MinVer&version=2.0.0"
+#addin "nuget:?package=Cake.Args&version=2.0.0"
 
 var target       = ArgumentOrDefault<string>("target") ?? "pack";
 var buildVersion = MinVer(s => s.WithTagPrefix("v").WithDefaultPreReleasePhase("preview"));
@@ -15,7 +15,7 @@ Task("restore")
     .IsDependentOn("clean")
     .Does(() =>
 {
-    DotNetCoreRestore("./serilog-sinks-notepad.sln", new DotNetCoreRestoreSettings
+    DotNetRestore("./serilog-sinks-notepad.sln", new DotNetRestoreSettings
     {
         LockedMode = true,
     });
@@ -25,12 +25,12 @@ Task("build")
     .IsDependentOn("restore")
     .DoesForEach(new[] { "Debug", "Release" }, (configuration) =>
 {
-    DotNetCoreBuild("./serilog-sinks-notepad.sln", new DotNetCoreBuildSettings
+    DotNetBuild("./serilog-sinks-notepad.sln", new DotNetBuildSettings
     {
         Configuration = configuration,
         NoRestore = true,
         NoIncremental = false,
-        MSBuildSettings = new DotNetCoreMSBuildSettings()
+        MSBuildSettings = new DotNetMSBuildSettings()
             .SetVersion(buildVersion.Version)
             .SetAssemblyVersion(buildVersion.AssemblyVersion)
             .SetFileVersion(buildVersion.FileVersion)
@@ -42,7 +42,7 @@ Task("test")
     .IsDependentOn("build")
     .Does(() =>
 {
-    var settings = new DotNetCoreTestSettings
+    var settings = new DotNetTestSettings
     {
         Configuration = "Release",
         NoRestore = true,
@@ -52,7 +52,7 @@ Task("test")
     var projectFiles = GetFiles("./test/**/*.csproj");
     foreach (var file in projectFiles)
     {
-        DotNetCoreTest(file.FullPath, settings);
+        DotNetTest(file.FullPath, settings);
     }
 });
 
@@ -62,13 +62,13 @@ Task("pack")
 {
     var releaseNotes = $"https://github.com/serilog-contrib/serilog-sinks-notepad/releases/tag/v{buildVersion.Version}";
 
-    DotNetCorePack("./src/Serilog.Sinks.Notepad/Serilog.Sinks.Notepad.csproj", new DotNetCorePackSettings
+    DotNetPack("./src/Serilog.Sinks.Notepad/Serilog.Sinks.Notepad.csproj", new DotNetPackSettings
     {
         Configuration = "Release",
         NoRestore = true,
         NoBuild = true,
         OutputDirectory = "./artifact/nuget",
-        MSBuildSettings = new DotNetCoreMSBuildSettings
+        MSBuildSettings = new DotNetMSBuildSettings
         {
             Version = buildVersion.Version,
             PackageReleaseNotes = releaseNotes,
@@ -94,7 +94,7 @@ Task("push")
         return;
     }
 
-    var nugetPushSettings = new DotNetCoreNuGetPushSettings
+    var nugetPushSettings = new DotNetNuGetPushSettings
     {
         Source = url,
         ApiKey = apiKey,
@@ -102,7 +102,7 @@ Task("push")
 
     foreach (var nugetPackageFile in GetFiles("./artifact/nuget/*.nupkg"))
     {
-        DotNetCoreNuGetPush(nugetPackageFile.FullPath, nugetPushSettings);
+        DotNetNuGetPush(nugetPackageFile.FullPath, nugetPushSettings);
     }
 });
 
