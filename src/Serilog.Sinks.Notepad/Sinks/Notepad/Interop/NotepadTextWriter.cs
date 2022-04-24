@@ -58,7 +58,7 @@ namespace Serilog.Sinks.Notepad.Interop
 
                 var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
 
-                var notepadEditorHandle = User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "Edit", null);
+                var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
                 if (notepadEditorHandle == IntPtr.Zero)
                 {
                     SelfLog.WriteLine($"Unable to access a Notepad Editor on process {currentNotepadProcess.ProcessName} ({currentNotepadProcess.Id})");
@@ -108,6 +108,19 @@ namespace Serilog.Sinks.Notepad.Interop
                 .FirstOrDefault();
 
             return mostRecentNotepadProcess;
+        }
+
+        private static IntPtr FindNotepadEditorHandle(IntPtr notepadWindowHandle)
+        {
+            // Windows 11 uses the new RichEditD2DPT class:
+            // https://devblogs.microsoft.com/math-in-office/windows-11-notepad/#some-implementation-details
+            if (User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "RichEditD2DPT", null) is var richEditHandle
+                && richEditHandle != IntPtr.Zero)
+            {
+                return richEditHandle;
+            }
+
+            return User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "Edit", null);
         }
 
         private void EnsureNotDisposed()
