@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - os: windows-2019
+          - os: windows-2022
             build: ./build.cmd
             push: true
     name: ${{ matrix.job.os }}
@@ -35,11 +35,15 @@ jobs:
       - name: Setup netcoreapp3.1
         uses: actions/setup-dotnet@v3.0.3
         with:
-          dotnet-version: "3.1.413"
+          dotnet-version: "3.1.425"
       - name: Setup net5.0
         uses: actions/setup-dotnet@v3.0.3
         with:
-          dotnet-version: "5.0.401"
+          dotnet-version: "5.0.408"
+      - name: Setup net6.0
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+          dotnet-version: "6.0.403"
       - name: Run dotnet --info
         run: dotnet --info
       - uses: actions/checkout@v3.2.0
