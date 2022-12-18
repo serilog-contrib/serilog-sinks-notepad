@@ -6,7 +6,6 @@
     <IsPackable>false</IsPackable>
     <AssemblyOriginatorKeyFile>../../assets/Serilog.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
     <RootNamespace>Serilog</RootNamespace>
