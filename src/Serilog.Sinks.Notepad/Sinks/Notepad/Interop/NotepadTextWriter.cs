@@ -14,12 +14,14 @@
 //
 #endregion
 
+using Serilog.Debugging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using Serilog.Debugging;
 
 namespace Serilog.Sinks.Notepad.Interop
 {
@@ -120,6 +122,13 @@ namespace Serilog.Sinks.Notepad.Interop
                 return richEditHandle;
             }
 
+            // Issue #59 - Alternate way of finding the RichEditD2DPT class:
+            if (FindEditorHandleThroughChildWindows(notepadWindowHandle) is var childRichEditHandle
+                && childRichEditHandle != IntPtr.Zero)
+            {
+                return childRichEditHandle;
+            }
+
             return User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "Edit", null);
         }
 
@@ -129,6 +138,41 @@ namespace Serilog.Sinks.Notepad.Interop
             {
                 throw new ObjectDisposedException(GetType().Name);
             }
+        }
+
+        private static bool EnumWindow(IntPtr handle, IntPtr pointer)
+        {
+            GCHandle gch = GCHandle.FromIntPtr(pointer);
+            List<IntPtr> list = gch.Target as List<IntPtr>;
+            if (list == null)
+            {
+                throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
+            }
+
+            // We only want windows of class RichEditD2DPT.
+            if (User32.FindWindowEx(handle, IntPtr.Zero, "RichEditD2DPT", null) != IntPtr.Zero)
+            {
+                list.Add(handle);
+            }
+
+            return true;
+        }
+
+        private static IntPtr FindEditorHandleThroughChildWindows(IntPtr notepadWindowHandle)
+        {
+            List<IntPtr> result = new List<IntPtr>();
+            GCHandle listHandle = GCHandle.Alloc(result);
+            try
+            {
+                User32.Win32Callback childProc = new User32.Win32Callback(EnumWindow);
+                User32.EnumChildWindows(notepadWindowHandle, childProc, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                if (listHandle.IsAllocated)
+                    listHandle.Free();
+            }
+            return result.FirstOrDefault();
         }
     }
 }
