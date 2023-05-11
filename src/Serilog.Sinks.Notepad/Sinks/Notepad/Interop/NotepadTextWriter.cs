@@ -14,12 +14,14 @@
 //
 #endregion
 
+using Serilog.Debugging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using Serilog.Debugging;
 
 namespace Serilog.Sinks.Notepad.Interop
 {
@@ -55,7 +57,10 @@ namespace Serilog.Sinks.Notepad.Interop
                     // No instances of Notepad found... Nothing to do
                     return;
                 }
+            }
 
+            if (_currentNotepadEditorHandle == IntPtr.Zero)
+            {
                 var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
 
                 var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
@@ -80,7 +85,16 @@ namespace Serilog.Sinks.Notepad.Interop
             // Write the log message to Notepad
             User32.SendMessage(_currentNotepadEditorHandle, User32.EM_REPLACESEL, (IntPtr)1, message);
 
-            buffer.Clear();
+            // Get how many characters are in the Notepad editor after putting in new text
+            var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+            // If no change in textLength, reset editor handle to try to find it again.
+            if (textLengthAfter == textLength)
+                _currentNotepadEditorHandle = IntPtr.Zero;
+
+            // Otherwise, we clear the buffer
+            else
+                buffer.Clear();
         }
 
         protected override void Dispose(bool disposing)
@@ -120,6 +134,13 @@ namespace Serilog.Sinks.Notepad.Interop
                 return richEditHandle;
             }
 
+            // Issue #59 - Alternate way of finding the RichEditD2DPT class:
+            if (FindEditorHandleThroughChildWindows(notepadWindowHandle) is var richEditHandleFromChildren
+                && richEditHandleFromChildren != IntPtr.Zero)
+            {
+                return richEditHandleFromChildren;
+            }
+
             return User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "Edit", null);
         }
 
@@ -129,6 +150,50 @@ namespace Serilog.Sinks.Notepad.Interop
             {
                 throw new ObjectDisposedException(GetType().Name);
             }
+        }
+
+        private static string GetClassNameFromWindow(IntPtr handle)
+        {
+            StringBuilder sb = new StringBuilder(256);
+            var ret = User32.GetClassName(handle, sb, sb.Capacity);
+            return ret != 0 ? sb.ToString() : string.Empty;
+        }
+
+        private static bool EnumWindow(IntPtr handle, IntPtr pointer)
+        {
+            GCHandle gch = GCHandle.FromIntPtr(pointer);
+            List<IntPtr> list = gch.Target as List<IntPtr>;
+            if (list == null)
+            {
+                throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
+            }
+
+            if (string.Equals(GetClassNameFromWindow(handle), "RichEditD2DPT", StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(handle);
+
+                // Stop enumerating - we found the one.
+                return false;
+            }
+
+            return true;
+        }
+
+        private static IntPtr FindEditorHandleThroughChildWindows(IntPtr notepadWindowHandle)
+        {
+            List<IntPtr> result = new List<IntPtr>(1);
+            GCHandle listHandle = GCHandle.Alloc(result);
+            try
+            {
+                User32.Win32Callback childProc = new User32.Win32Callback(EnumWindow);
+                User32.EnumChildWindows(notepadWindowHandle, childProc, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                if (listHandle.IsAllocated)
+                    listHandle.Free();
+            }
+            return result.FirstOrDefault();
         }
     }
 }
