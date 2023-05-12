@@ -57,7 +57,10 @@ namespace Serilog.Sinks.Notepad.Interop
                     // No instances of Notepad found... Nothing to do
                     return;
                 }
+            }
 
+            if (_currentNotepadEditorHandle == IntPtr.Zero)
+            {
                 var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
 
                 var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
