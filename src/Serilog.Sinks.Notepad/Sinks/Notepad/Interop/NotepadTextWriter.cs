@@ -123,10 +123,10 @@ namespace Serilog.Sinks.Notepad.Interop
             }
 
             // Issue #59 - Alternate way of finding the RichEditD2DPT class:
-            if (FindEditorHandleThroughChildWindows(notepadWindowHandle) is var childRichEditHandle
-                && childRichEditHandle != IntPtr.Zero)
+            if (FindEditorHandleThroughChildWindows(notepadWindowHandle) is var richEditHandleFromChildren
+                && richEditHandleFromChildren != IntPtr.Zero)
             {
-                return childRichEditHandle;
+                return richEditHandleFromChildren;
             }
 
             return User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "Edit", null);
@@ -140,6 +140,13 @@ namespace Serilog.Sinks.Notepad.Interop
             }
         }
 
+        private static string GetClassNameFromWindow(IntPtr handle)
+        {
+            StringBuilder sb = new StringBuilder(256);
+            var ret = User32.GetClassName(handle, sb, sb.Capacity);
+            return ret != 0 ? sb.ToString() : string.Empty;
+        }
+
         private static bool EnumWindow(IntPtr handle, IntPtr pointer)
         {
             GCHandle gch = GCHandle.FromIntPtr(pointer);
@@ -149,10 +156,12 @@ namespace Serilog.Sinks.Notepad.Interop
                 throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
             }
 
-            // We only want windows of class RichEditD2DPT.
-            if (User32.FindWindowEx(handle, IntPtr.Zero, "RichEditD2DPT", null) != IntPtr.Zero)
+            if (string.Equals(GetClassNameFromWindow(handle), "RichEditD2DPT", StringComparison.OrdinalIgnoreCase))
             {
                 list.Add(handle);
+
+                // Stop enumerating - we found the one.
+                return false;
             }
 
             return true;
@@ -160,7 +169,7 @@ namespace Serilog.Sinks.Notepad.Interop
 
         private static IntPtr FindEditorHandleThroughChildWindows(IntPtr notepadWindowHandle)
         {
-            List<IntPtr> result = new List<IntPtr>();
+            List<IntPtr> result = new List<IntPtr>(1);
             GCHandle listHandle = GCHandle.Alloc(result);
             try
             {
