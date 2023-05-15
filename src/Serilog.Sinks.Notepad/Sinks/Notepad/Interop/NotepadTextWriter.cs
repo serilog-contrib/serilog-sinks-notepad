@@ -85,7 +85,16 @@ namespace Serilog.Sinks.Notepad.Interop
             // Write the log message to Notepad
             User32.SendMessage(_currentNotepadEditorHandle, User32.EM_REPLACESEL, (IntPtr)1, message);
 
-            buffer.Clear();
+            // Get how many characters are in the Notepad editor after putting in new text
+            var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+            // If no change in textLength, reset editor handle to try to find it again.
+            if (textLengthAfter == textLength)
+                _currentNotepadEditorHandle = IntPtr.Zero;
+
+            // Otherwise, we clear the buffer
+            else
+                buffer.Clear();
         }
 
         protected override void Dispose(bool disposing)
