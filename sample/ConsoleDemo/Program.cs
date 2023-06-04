@@ -33,8 +33,8 @@ namespace ConsoleDemo
 
             try
             {
-                //Console.WriteLine("Open a `notepad.exe` instance and press <enter> to continue...");
-                //Console.ReadLine();
+                Console.WriteLine("Open a `notepad.exe` instance and press <enter> to continue...");
+                Console.ReadLine();
 
                 Console.WriteLine("Writing messages to the most recent Notepad you opened...");
 

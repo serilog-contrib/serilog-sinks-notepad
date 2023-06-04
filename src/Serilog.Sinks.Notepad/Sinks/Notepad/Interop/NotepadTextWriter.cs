@@ -74,10 +74,10 @@ namespace Serilog.Sinks.Notepad.Interop
             }
 
             // Get how many characters are in the Notepad editor already
-            var textLength = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+            var textLengthBefore = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
 
             // Set the caret position to the end of the text
-            User32.SendMessage(_currentNotepadEditorHandle, User32.EM_SETSEL, (IntPtr)textLength, (IntPtr)textLength);
+            User32.SendMessage(_currentNotepadEditorHandle, User32.EM_SETSEL, (IntPtr)textLengthBefore, (IntPtr)textLengthBefore);
 
             var buffer = base.GetStringBuilder();
             var message = buffer.ToString();
@@ -88,13 +88,17 @@ namespace Serilog.Sinks.Notepad.Interop
             // Get how many characters are in the Notepad editor after putting in new text
             var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
 
-            // If no change in textLength, reset editor handle to try to find it again.
-            if (textLengthAfter == textLength)
+            // If no change in the text length, reset editor handle to try to find it again.
+            if (textLengthAfter == textLengthBefore)
+            {
                 _currentNotepadEditorHandle = IntPtr.Zero;
-
-            // Otherwise, we clear the buffer
+            }
             else
+            {
+                // Otherwise, we clear the buffer
+
                 buffer.Clear();
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -161,9 +165,10 @@ namespace Serilog.Sinks.Notepad.Interop
 
         private static bool EnumWindow(IntPtr handle, IntPtr pointer)
         {
-            GCHandle gch = GCHandle.FromIntPtr(pointer);
-            List<IntPtr> list = gch.Target as List<IntPtr>;
-            if (list == null)
+            var gch = GCHandle.FromIntPtr(pointer);
+            var list = gch.Target as List<IntPtr>;
+
+            if (list is null)
             {
                 throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
             }
@@ -181,8 +186,9 @@ namespace Serilog.Sinks.Notepad.Interop
 
         private static IntPtr FindEditorHandleThroughChildWindows(IntPtr notepadWindowHandle)
         {
-            List<IntPtr> result = new List<IntPtr>(1);
-            GCHandle listHandle = GCHandle.Alloc(result);
+            var result = new List<IntPtr>(1);
+            var listHandle = GCHandle.Alloc(result);
+
             try
             {
                 User32.Win32Callback childProc = new User32.Win32Callback(EnumWindow);
@@ -191,8 +197,11 @@ namespace Serilog.Sinks.Notepad.Interop
             finally
             {
                 if (listHandle.IsAllocated)
+                {
                     listHandle.Free();
+                }
             }
+
             return result.FirstOrDefault();
         }
     }
