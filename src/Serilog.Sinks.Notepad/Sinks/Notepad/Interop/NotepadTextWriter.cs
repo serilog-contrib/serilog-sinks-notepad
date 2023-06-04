@@ -44,6 +44,9 @@ namespace Serilog.Sinks.Notepad.Interop
 
             base.Flush();
 
+            var attempts = 0;
+
+        TryWriteToNotepad:
             var currentNotepadProcess = _currentNotepadProcess;
             var targetNotepadProcess = _notepadProcessFinderFunc();
 
@@ -92,13 +95,16 @@ namespace Serilog.Sinks.Notepad.Interop
             if (textLengthAfter == textLengthBefore)
             {
                 _currentNotepadEditorHandle = IntPtr.Zero;
-            }
-            else
-            {
-                // Otherwise, we clear the buffer
+                attempts++;
 
-                buffer.Clear();
+                // We try to write to Notepad 3 times before we give up and discard the buffer
+                if (attempts < 3)
+                {
+                    goto TryWriteToNotepad;
+                }
             }
+
+            buffer.Clear();
         }
 
         protected override void Dispose(bool disposing)
