@@ -44,6 +44,9 @@ namespace Serilog.Sinks.Notepad.Interop
 
             base.Flush();
 
+            var attempts = 0;
+
+        TryWriteToNotepad:
             var currentNotepadProcess = _currentNotepadProcess;
             var targetNotepadProcess = _notepadProcessFinderFunc();
 
@@ -88,13 +91,20 @@ namespace Serilog.Sinks.Notepad.Interop
             // Get how many characters are in the Notepad editor after putting in new text
             var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
 
-            // If no change in textLength, reset editor handle to try to find it again.
-            if (textLengthAfter == textLength)
+            // If no change in the text length, reset editor handle to try to find it again.
+            if (textLengthAfter == textLengthBefore)
+            {
                 _currentNotepadEditorHandle = IntPtr.Zero;
+                attempts++;
 
-            // Otherwise, we clear the buffer
-            else
-                buffer.Clear();
+                // We try to write to Notepad 3 times before we give up and discard the buffer
+                if (attempts < 3)
+                {
+                    goto TryWriteToNotepad;
+                }
+            }
+
+            buffer.Clear();
         }
 
         protected override void Dispose(bool disposing)
