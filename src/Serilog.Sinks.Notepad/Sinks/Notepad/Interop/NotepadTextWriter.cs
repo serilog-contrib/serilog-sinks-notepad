@@ -45,66 +45,66 @@ namespace Serilog.Sinks.Notepad.Interop
             base.Flush();
 
             var attempts = 0;
+            var succeeded = false;
+            StringBuilder buffer = null;
 
-        TryWriteToNotepad:
-            var currentNotepadProcess = _currentNotepadProcess;
-            var targetNotepadProcess = _notepadProcessFinderFunc();
-
-            if (currentNotepadProcess is null || targetNotepadProcess is null || currentNotepadProcess.Id != targetNotepadProcess.Id)
+            do
             {
-                _currentNotepadProcess = currentNotepadProcess = targetNotepadProcess;
-                _currentNotepadEditorHandle = IntPtr.Zero;
+                var currentNotepadProcess = _currentNotepadProcess;
+                var targetNotepadProcess = _notepadProcessFinderFunc();
 
-                if (currentNotepadProcess is null || currentNotepadProcess.HasExited)
+                if (currentNotepadProcess is null || targetNotepadProcess is null || currentNotepadProcess.Id != targetNotepadProcess.Id)
                 {
-                    // No instances of Notepad found... Nothing to do
-                    return;
-                }
-            }
+                    _currentNotepadProcess = currentNotepadProcess = targetNotepadProcess;
+                    _currentNotepadEditorHandle = IntPtr.Zero;
 
-            if (_currentNotepadEditorHandle == IntPtr.Zero)
-            {
-                var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
-
-                var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
-                if (notepadEditorHandle == IntPtr.Zero)
-                {
-                    SelfLog.WriteLine($"Unable to access a Notepad Editor on process {currentNotepadProcess.ProcessName} ({currentNotepadProcess.Id})");
-                    return;
+                    if (currentNotepadProcess is null || currentNotepadProcess.HasExited)
+                    {
+                        // No instances of Notepad found... Nothing to do
+                        return;
+                    }
                 }
 
-                _currentNotepadEditorHandle = notepadEditorHandle;
-            }
-
-            // Get how many characters are in the Notepad editor already
-            var textLength = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
-
-            // Set the caret position to the end of the text
-            User32.SendMessage(_currentNotepadEditorHandle, User32.EM_SETSEL, (IntPtr)textLength, (IntPtr)textLength);
-
-            var buffer = base.GetStringBuilder();
-            var message = buffer.ToString();
-
-            // Write the log message to Notepad
-            User32.SendMessage(_currentNotepadEditorHandle, User32.EM_REPLACESEL, (IntPtr)1, message);
-
-            // Get how many characters are in the Notepad editor after putting in new text
-            var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
-
-            // If no change in the text length, reset editor handle to try to find it again.
-            if (textLengthAfter == textLengthBefore)
-            {
-                _currentNotepadEditorHandle = IntPtr.Zero;
-                attempts++;
-
-                // We try to write to Notepad 3 times before we give up and discard the buffer
-                if (attempts < 3)
+                if (_currentNotepadEditorHandle == IntPtr.Zero)
                 {
-                    goto TryWriteToNotepad;
+                    var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
+
+                    var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
+                    if (notepadEditorHandle == IntPtr.Zero)
+                    {
+                        SelfLog.WriteLine($"Unable to access a Notepad Editor on process {currentNotepadProcess.ProcessName} ({currentNotepadProcess.Id})");
+                        return;
+                    }
+
+                    _currentNotepadEditorHandle = notepadEditorHandle;
+                }
+
+                // Get how many characters are in the Notepad editor already
+                var textLength = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+                // Set the caret position to the end of the text
+                User32.SendMessage(_currentNotepadEditorHandle, User32.EM_SETSEL, (IntPtr)textLength, (IntPtr)textLength);
+
+                buffer = base.GetStringBuilder();
+                var message = buffer.ToString();
+
+                // Write the log message to Notepad
+                User32.SendMessage(_currentNotepadEditorHandle, User32.EM_REPLACESEL, (IntPtr)1, message);
+
+                // Get how many characters are in the Notepad editor after putting in new text
+                var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+                // If no change in the text length, reset editor handle to try to find it again.
+                if (textLengthAfter == textLength)
+                {
+                    _currentNotepadEditorHandle = IntPtr.Zero;
+                    attempts++;
                 }
             }
+            while (!succeeded && attempts < 3);
 
-            buffer.Clear();
+            if (buffer != null)
+                buffer.Clear();
         }
 
         protected override void Dispose(bool disposing)
