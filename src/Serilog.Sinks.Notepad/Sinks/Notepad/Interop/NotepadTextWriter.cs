@@ -95,7 +95,7 @@ namespace Serilog.Sinks.Notepad.Interop
                 var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
 
                 // Determine if the write succeeded. This will break the loop.
-                succeeded = textLengthAfter != textLength;
+                succeeded = textLengthAfter > textLength;
 
                 // If no change in the text length, reset editor handle to try to find it again.
                 if (!succeeded)
