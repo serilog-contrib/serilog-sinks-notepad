@@ -14,12 +14,14 @@
 //
 #endregion
 
+using Serilog.Debugging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using Serilog.Debugging;
 
 namespace Serilog.Sinks.Notepad.Interop
 {
@@ -42,45 +44,70 @@ namespace Serilog.Sinks.Notepad.Interop
 
             base.Flush();
 
-            var currentNotepadProcess = _currentNotepadProcess;
-            var targetNotepadProcess = _notepadProcessFinderFunc();
+            var attempts = 0;
+            var succeeded = false;
+            StringBuilder buffer = null;
 
-            if (currentNotepadProcess is null || targetNotepadProcess is null || currentNotepadProcess.Id != targetNotepadProcess.Id)
+            do
             {
-                _currentNotepadProcess = currentNotepadProcess = targetNotepadProcess;
-                _currentNotepadEditorHandle = IntPtr.Zero;
+                var currentNotepadProcess = _currentNotepadProcess;
+                var targetNotepadProcess = _notepadProcessFinderFunc();
 
-                if (currentNotepadProcess is null || currentNotepadProcess.HasExited)
+                if (currentNotepadProcess is null || targetNotepadProcess is null || currentNotepadProcess.Id != targetNotepadProcess.Id)
                 {
-                    // No instances of Notepad found... Nothing to do
-                    return;
+                    _currentNotepadProcess = currentNotepadProcess = targetNotepadProcess;
+                    _currentNotepadEditorHandle = IntPtr.Zero;
+
+                    if (currentNotepadProcess is null || currentNotepadProcess.HasExited)
+                    {
+                        // No instances of Notepad found... Nothing to do
+                        return;
+                    }
                 }
 
-                var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
-
-                var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
-                if (notepadEditorHandle == IntPtr.Zero)
+                if (_currentNotepadEditorHandle == IntPtr.Zero)
                 {
-                    SelfLog.WriteLine($"Unable to access a Notepad Editor on process {currentNotepadProcess.ProcessName} ({currentNotepadProcess.Id})");
-                    return;
+                    var notepadWindowHandle = currentNotepadProcess.MainWindowHandle;
+
+                    var notepadEditorHandle = FindNotepadEditorHandle(notepadWindowHandle);
+                    if (notepadEditorHandle == IntPtr.Zero)
+                    {
+                        SelfLog.WriteLine($"Unable to access a Notepad Editor on process {currentNotepadProcess.ProcessName} ({currentNotepadProcess.Id})");
+                        return;
+                    }
+
+                    _currentNotepadEditorHandle = notepadEditorHandle;
                 }
 
-                _currentNotepadEditorHandle = notepadEditorHandle;
+                // Get how many characters are in the Notepad editor already
+                var textLength = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+                // Set the caret position to the end of the text
+                User32.SendMessage(_currentNotepadEditorHandle, User32.EM_SETSEL, (IntPtr)textLength, (IntPtr)textLength);
+
+                buffer = base.GetStringBuilder();
+                var message = buffer.ToString();
+
+                // Write the log message to Notepad
+                User32.SendMessage(_currentNotepadEditorHandle, User32.EM_REPLACESEL, (IntPtr)1, message);
+
+                // Get how many characters are in the Notepad editor after putting in new text
+                var textLengthAfter = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+
+                // Determine if the write succeeded. This will break the loop.
+                succeeded = textLengthAfter > textLength;
+
+                // If no change in the text length, reset editor handle to try to find it again.
+                if (!succeeded)
+                {
+                    _currentNotepadEditorHandle = IntPtr.Zero;
+                    attempts++;
+                }
             }
+            while (!succeeded && attempts < 3);
 
-            // Get how many characters are in the Notepad editor already
-            var textLength = User32.SendMessage(_currentNotepadEditorHandle, User32.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
-
-            // Set the caret position to the end of the text
-            User32.SendMessage(_currentNotepadEditorHandle, User32.EM_SETSEL, (IntPtr)textLength, (IntPtr)textLength);
-
-            var buffer = base.GetStringBuilder();
-            var message = buffer.ToString();
-
-            // Write the log message to Notepad
-            User32.SendMessage(_currentNotepadEditorHandle, User32.EM_REPLACESEL, (IntPtr)1, message);
-
-            buffer.Clear();
+            if (buffer != null)
+                buffer.Clear();
         }
 
         protected override void Dispose(bool disposing)
@@ -120,6 +147,13 @@ namespace Serilog.Sinks.Notepad.Interop
                 return richEditHandle;
             }
 
+            // Issue #59 - Alternate way of finding the RichEditD2DPT class:
+            if (FindEditorHandleThroughChildWindows(notepadWindowHandle) is var richEditHandleFromChildren
+                && richEditHandleFromChildren != IntPtr.Zero)
+            {
+                return richEditHandleFromChildren;
+            }
+
             return User32.FindWindowEx(notepadWindowHandle, IntPtr.Zero, "Edit", null);
         }
 
@@ -129,6 +163,50 @@ namespace Serilog.Sinks.Notepad.Interop
             {
                 throw new ObjectDisposedException(GetType().Name);
             }
+        }
+
+        private static string GetClassNameFromWindow(IntPtr handle)
+        {
+            StringBuilder sb = new StringBuilder(256);
+            var ret = User32.GetClassName(handle, sb, sb.Capacity);
+            return ret != 0 ? sb.ToString() : string.Empty;
+        }
+
+        private static bool EnumWindow(IntPtr handle, IntPtr pointer)
+        {
+            GCHandle gch = GCHandle.FromIntPtr(pointer);
+            List<IntPtr> list = gch.Target as List<IntPtr>;
+            if (list == null)
+            {
+                throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
+            }
+
+            if (string.Equals(GetClassNameFromWindow(handle), "RichEditD2DPT", StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(handle);
+
+                // Stop enumerating - we found the one.
+                return false;
+            }
+
+            return true;
+        }
+
+        private static IntPtr FindEditorHandleThroughChildWindows(IntPtr notepadWindowHandle)
+        {
+            List<IntPtr> result = new List<IntPtr>(1);
+            GCHandle listHandle = GCHandle.Alloc(result);
+            try
+            {
+                User32.Win32Callback childProc = new User32.Win32Callback(EnumWindow);
+                User32.EnumChildWindows(notepadWindowHandle, childProc, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                if (listHandle.IsAllocated)
+                    listHandle.Free();
+            }
+            return result.FirstOrDefault();
         }
     }
 }

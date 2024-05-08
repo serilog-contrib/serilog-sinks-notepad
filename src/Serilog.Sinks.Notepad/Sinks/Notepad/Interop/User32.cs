@@ -35,5 +35,17 @@ namespace Serilog.Sinks.Notepad.Interop
 
         [DllImport("User32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, [MarshalAs(UnmanagedType.LPWStr)] string lParam);
+
+
+        // Needed for EnumChildWindows for registering a call back function.
+        public delegate bool Win32Callback(IntPtr hwnd, IntPtr lParam);
+
+        [DllImport("user32.Dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EnumChildWindows(IntPtr parentHandle, Win32Callback callback, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+
     }
 }
